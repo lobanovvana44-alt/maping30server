@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love | Проверка маппинга</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+</head>
+<body>
+
+    <div id="maintenance-screen" class="maintenance-overlay hidden">
+        <div class="maintenance-content">
+            <i class="fa-solid fa-screwdriver-wrench maint-icon"></i>
+            <h1>Технические работы</h1>
+            <p>На сайт загружаются обновления или проводятся тех. работы.</p>
+            <p class="maint-sub">Пожалуйста, ожидайте.</p>
+            <div class="loader"></div>
+        </div>
+    </div>
+
+    <div class="container" id="auth-container">
+        <div class="form-box">
+            <div class="auth-header-centered">
+                <i class="fa-solid fa-fire-flame-curved logo-fire-big"></i>
+                <span class="auth-title-text">Love | Проверка маппинга</span>
+            </div>
+            <div id="login-form" class="form-content">
+                <h2>Вход</h2>
+                <input type="text" id="login-nick" placeholder="Nick Name">
+                <input type="password" id="login-pass" placeholder="Пароль">
+                <button class="auth-btn" onclick="loginUser()">Войти</button>
+                <p class="switch-text">Нет аккаунта? <span onclick="showRegister()">Регистрация</span></p>
+            </div>
+            <div id="register-form" class="form-content hidden">
+                <h2>Регистрация</h2>
+                <input type="text" id="reg-nick" placeholder="Nick Name">
+                <input type="password" id="reg-pass" placeholder="Пароль">
+                <input type="number" id="reg-vk" placeholder="VK ID (Только цифры)">
+                <button class="auth-btn" onclick="registerUser()">Зарегистрироваться</button>
+                <p class="switch-text">Есть аккаунт? <span onclick="showLogin()">Войти</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="dashboard hidden">
+        <header>
+            <div class="header-top">
+                <div class="logo-section">
+                    <i class="fa-solid fa-fire-flame-curved logo-icon"></i>
+                    <span class="logo-text">Love | Проверка маппинга</span>
+                </div>
+                <div class="header-actions">
+                    <div id="admin-maint-indicator" class="maint-badge hidden">🔧 Тех. работы активны</div>
+                    
+                    <!-- КНОПКА КОЛОКОЛЬЧИК (ОБНОВЛЕНА) -->
+                    <button id="notif-btn-main" class="notif-btn" onclick="toggleNotifications()" title="Уведомления">
+                        <i class="fa-regular fa-bell"></i>
+                        <span id="notif-badge" class="notif-badge hidden">0</span>
+                    </button>
+
+                    <button class="workers-btn" onclick="openWorkersModal()">
+                        <i class="fa-solid fa-users"></i> Работники
+                    </button>
+                    <button id="btn-upload-access" class="download-btn hidden" onclick="openUploadChoice()">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Загрузка
+                    </button>
+                    <div class="profile-widget" onclick="openProfile()">
+                        <div class="avatar-circle"><img id="header-avatar" src="" alt="Ava"></div>
+                        <div class="user-info-mini">
+                            <span id="header-nickname" class="nick-text">...</span>
+                            <span class="status-text">Online</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-bottom">
+                <nav class="nav-tabs">
+                    <button id="tab-access" class="tab-btn hidden" onclick="switchTab('access')"><i class="fa-solid fa-lock"></i> Доступ</button>
+                    <button id="tab-houses" class="tab-btn" onclick="trySwitchTab('houses')"><i class="fa-solid fa-house"></i> Дома</button>
+                    <button id="tab-biz" class="tab-btn" onclick="trySwitchTab('biz')"><i class="fa-solid fa-briefcase"></i> Бизнес</button>
+                    <button id="tab-trailers" class="tab-btn" onclick="trySwitchTab('trailers')"><i class="fa-solid fa-trailer"></i> Трейлеры</button>
+                </nav>
+                <button class="archive-link" onclick="trySwitchTab('archive')"><i class="fa-solid fa-box-archive"></i> Архив</button>
+            </div>
+        </header>
+        
+        <main>
+            <div id="date-display-container" class="filter-bar-centered hidden" style="margin-top: 20px;">
+                <div class="date-pill">
+                    <i class="fa-regular fa-calendar"></i> <span id="header-date-text">Загрузка...</span>
+                </div>
+            </div>
+
+            <div id="search-controls" class="search-bar-container hidden">
+                <div class="search-anim-box">
+                    <input type="text" id="table-search-input" placeholder="Поиск..." oninput="applyFilters()">
+                    <button class="search-btn-icon"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="filter-checkbox-box">
+                        <input type="checkbox" id="filter-unchecked" onchange="applyFilters()">
+                        <label for="filter-unchecked" title="Никем не проверенные">Только свободные</label>
+                    </div>
+                    <div class="filter-checkbox-box">
+                        <input type="checkbox" id="filter-checked-only" onchange="applyFilters()">
+                        <label for="filter-checked-only" title="Есть нарушение или доказательства" style="color: #00ff88;">Только проверенные</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-area">
+                <h1>Добро пожаловать!</h1>
+                <p>Выберите категорию сверху.</p>
+            </div>
+            <div id="lock-screen" class="lock-screen hidden">
+                <i class="fa-solid fa-lock lock-big-icon"></i>
+                <h2>У вас нет доступа!</h2>
+                <p>Обратитесь к <span class="admin-name">Tornado_Love</span>, чтобы получить доступ.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- ОКНО УВЕДОМЛЕНИЙ -->
+    <div id="notifications-modal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-content" style="width: 500px; max-height: 80vh; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+                <h3 style="margin:0;"><i class="fa-regular fa-bell"></i> Уведомления</h3>
+                <button class="close-icon" onclick="toggleNotifications()" style="font-size:1.5rem; float:none;">&times;</button>
+            </div>
+            <div id="notifications-list-container" class="notifications-list">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ОКНО ОТПРАВКИ УВЕДОМЛЕНИЯ -->
+    <div id="send-notif-modal" class="modal-overlay hidden" style="z-index: 2500;">
+        <div class="modal-content" style="width: 500px;">
+            <h3>📢 Отправить уведомление</h3>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Это сообщение увидят все сотрудники.</p>
+            <div class="add-worker-form">
+                <label>Заголовок</label>
+                <input type="text" id="notif-title-input" placeholder="Например: Обновление правил">
+                <label>Текст сообщения</label>
+                <textarea id="notif-text-input" class="custom-textarea" style="height:150px;" placeholder="Введите текст..."></textarea>
+                <div class="form-buttons">
+                    <button class="save-btn" onclick="sendNotification()">Отправить</button>
+                    <button class="logout-btn" onclick="closeSendNotificationModal()">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- НАСТРОЙКИ -->
+    <div id="settings-modal" class="modal-overlay hidden" style="z-index: 3100;">
+        <div class="modal-content" style="width: 450px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">⚙️ Настройки</h3>
+                <button class="close-icon" onclick="closeSettingsModal()" style="float:none;">✖</button>
+            </div>
+            
+            <div class="settings-section">
+                <div class="settings-title">Цвет интерфейса</div>
+                <div class="colors-grid">
+                    <div class="theme-btn" style="background:#e94560;" onclick="applyTheme('default')" title="Default"></div>
+                    <div class="theme-btn" style="background:#ff007f;" onclick="applyTheme('pink')" title="Pink"></div>
+                    <div class="theme-btn" style="background:#00ff88;" onclick="applyTheme('green')" title="Green"></div>
+                    <div class="theme-btn" style="background:#ff4757;" onclick="applyTheme('red')" title="Red"></div>
+                    <div class="theme-btn" style="background:#ffffff; border:1px solid #999;" onclick="applyTheme('black')" title="Black/Dark"></div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-title">Строк в таблице</div>
+                <select id="rows-per-page-select" class="custom-input-select" onchange="changeRowsPerPage(this.value)">
+                    <option value="25">25 строк</option>
+                    <option value="50">50 строк</option>
+                    <option value="100">100 строк (Стандарт)</option>
+                    <option value="150">150 строк (Может лагать)</option>
+                    <option value="250">250 строк (Лагает)</option>
+                </select>
+            </div>
+
+            <button class="logout-btn" onclick="closeSettingsModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="fix-vk-modal" class="modal-overlay hidden" style="z-index: 9999;">
+        <div class="modal-content warning-card" style="width: 400px; border-color: #0077ff; box-shadow: 0 0 30px rgba(0, 119, 255, 0.3);">
+            <i class="fa-brands fa-vk warning-icon" style="color: #0077ff;"></i>
+            <h3>Исправление VK ID</h3>
+            <p style="margin-bottom: 15px;">Ваш текущий VK ID указан неверно (ссылка или текст).</p>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">Укажите только цифры (минимум 4 знака).</p>
+            <input type="number" id="fix-vk-input" placeholder="Например: 478328">
+            <button class="action-btn" onclick="saveCorrectedVkId()" style="background: #0077ff; margin-top: 10px;">Сохранить и продолжить</button>
+        </div>
+    </div>
+
+    <div id="logs-modal" class="modal-overlay hidden" style="z-index: 2400;">
+        <div class="modal-content logs-card-huge">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>📜 Логи действий</h3>
+                <button class="mini-btn del-mini" onclick="clearLogs()" title="Очистить все логи"><i class="fa-solid fa-trash"></i></button>
+            </div>
+            <div class="logs-search-panel">
+                <input type="text" id="log-search-nick" placeholder="Ник (необязательно)" class="log-input">
+                <div class="date-inputs">
+                    <label>От:</label>
+                    <input type="date" id="log-date-from" class="log-input">
+                    <label>До:</label>
+                    <input type="date" id="log-date-to" class="log-input">
+                </div>
+                <button class="action-btn" onclick="searchLogs()" style="background:#0077ff;">🔍 Поиск</button>
+                <button class="action-btn" onclick="loadAllLogs()" style="background:#2a3655;">Загрузить все</button>
+            </div>
+            <div class="workers-list-container-new" id="logs-list" style="height: 100%; margin-top: 15px;">
+                <p style="text-align:center; color:#888; margin-top:50px;">Нажмите "Загрузить все" или используйте поиск</p>
+            </div>
+            <button class="cancel-btn-wide" onclick="closeLogsModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="upload-choice-modal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-content warning-card" style="border-color: #aaa; width: 400px;">
+            <h3>Что желаете загрузить?</h3><br>
+            <div class="upload-grid">
+                <button class="upload-choice-btn" onclick="openUploadInput('houses')"><i class="fa-solid fa-house"></i> Дома</button>
+                <button class="upload-choice-btn" onclick="openUploadInput('biz')"><i class="fa-solid fa-briefcase"></i> Бизнесы</button>
+                <button class="upload-choice-btn" onclick="openUploadInput('trailers')"><i class="fa-solid fa-trailer"></i> Трейлеры</button>
+            </div>
+            <button class="logout-btn" onclick="closeUploadChoice()" style="margin-top: 20px;">Отмена</button>
+        </div>
+    </div>
+
+    <div id="upload-input-modal" class="modal-overlay hidden" style="z-index: 2100;">
+        <div class="modal-content" style="width: 600px;">
+            <h3>Вставьте данные</h3>
+            <p style="color: #aaa; font-size: 0.8rem; margin-bottom: 10px;">Формат: Название: Имя (ID), Владелец: Ник</p>
+            <textarea id="upload-textarea" class="custom-textarea" placeholder="Название: Avenue Empire (0), Владелец: Alex_Avenue..."></textarea>
+            <div class="form-buttons">
+                <button class="save-btn" onclick="processBatchUpload()">Загрузить</button>
+                <button class="logout-btn" onclick="closeUploadInput()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="update-popup" class="modal-overlay hidden" style="z-index: 9999;">
+        <div class="modal-content warning-card" style="border-color: #00ff88; box-shadow: 0 0 30px rgba(0,255,136,0.3);">
+            <i class="fa-solid fa-rotate-right warning-icon" style="color: #00ff88;"></i>
+            <h3>Вышло обновление!</h3>
+            <p>Сайт был обновлен. Перезагрузите страницу.</p>
+            <button class="action-btn" onclick="location.reload()" style="background: #00ff88; color: black;">Перезагрузить</button>
+        </div>
+    </div>
+
+    <div id="access-denied-popup" class="modal-overlay hidden" style="z-index:2000;">
+        <div class="modal-content warning-card">
+            <i class="fa-solid fa-triangle-exclamation warning-icon"></i>
+            <h3>У вас нет доступа!</h3>
+            <p>Вам необходимо попасть в WhiteList.</p>
+            <button class="action-btn" onclick="closeAccessPopup()">Понятно</button>
+        </div>
+    </div>
+
+    <div id="edit-record-modal" class="modal-overlay hidden" style="z-index: 1650;">
+        <div class="modal-content workers-card-new" style="height: auto;">
+            <div class="modal-header"><h3>✏️ Редактировать (Админ)</h3></div>
+            <div class="add-worker-form">
+                <input type="hidden" id="edit-key">
+                <label>Владелец</label><input type="text" id="edit-owner">
+                <label>Название</label><input type="text" id="edit-name">
+                <label>Тип нарушения</label>
+                <select id="edit-violation" class="custom-select" style="border: 1px solid rgba(255,255,255,0.1);">
+                    <option value="Нет нарушения">Нет нарушения</option>
+                    <option value="Маппинг">Маппинг</option>
+                    <option value="Названия">Названия</option>
+                    <option value="Маппинг + названия">Маппинг + названия</option>
+                </select>
+                <label>Доказательства</label><input type="text" id="edit-proof" placeholder="Вставьте ссылку или текст">
+                <label>Кто проверил</label><input type="text" id="edit-checkedBy" placeholder="Nick_Name">
+                <div class="form-buttons">
+                    <button class="save-btn" onclick="saveEditedRecord()">Сохранить</button>
+                    <button class="logout-btn" onclick="closeEditRecordModal()">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="workers-modal" class="modal-overlay hidden">
+        <div class="modal-content workers-card-new">
+            <div id="workers-view-list">
+                <div class="workers-header-top">
+                    <h3 class="workers-title">Сотрудники</h3>
+                    <button id="btn-to-add-worker" class="add-btn-small hidden" onclick="showAddWorkerForm()">Добавить</button>
+                </div>
+                <div class="workers-columns-title"><span class="col-left">ДОЛЖНОСТЬ</span><span class="col-right">Nick_Name</span></div>
+                <div class="workers-list-container-new" id="workers-list"></div>
+                <button class="cancel-btn-wide" onclick="closeWorkersModal()">Закрыть</button>
+            </div>
+            <div id="workers-view-add" class="hidden">
+                <div class="modal-header"><h3>➕ Добавить</h3></div>
+                <div class="add-worker-form">
+                    <label>Nick Name</label>
+                    <input type="text" id="worker-nick-input" placeholder="Nick_Name">
+                    <label>Должность</label>
+                    <select id="worker-pos-input" class="custom-input-select">
+                        <option value="Работник">Работник</option>
+                        <option value="ЗГС Маппинга">ЗГС Маппинга</option>
+                        <option value="ГС Маппинга">ГС Маппинга</option>
+                        <option value="Куратор">Куратор</option>
+                    </select>
+                    <label>LVL (1-5)</label>
+                    <input type="number" id="worker-lvl-input" placeholder="1-5 (Влияет только на цвет)" min="1" max="5">
+                    <div class="form-buttons">
+                        <button class="save-btn" onclick="saveWorker()">Сохранить</button>
+                        <button class="logout-btn" onclick="showWorkersList()">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-user-modal" class="modal-overlay hidden" style="z-index: 1200;">
+        <div class="modal-content mini-profile-card" style="height: auto; width: 400px;">
+            <div class="mini-profile-header">
+                <div class="mini-avatar-box"><img id="view-user-avatar" src="" alt="Avatar"></div>
+                <h2 id="view-user-nick">Nick</h2>
+                <div id="view-user-status-container" style="margin-top: 5px;">
+                    <span id="view-user-status" class="status-indicator-text offline">Offline</span>
+                </div>
+                <span id="view-user-role-badge" class="role-badge" style="margin-top:10px;">Role</span>
+            </div>
+            <div class="mini-profile-body">
+                <div class="info-row"><i class="fa-brands fa-vk"></i><span id="view-user-vk">ID</span></div>
+                <div class="stats-container" style="margin-top: 20px;">
+                    <div class="stats-box">
+                        <div class="stats-label">За неделю</div>
+                        <div id="stats-current" class="stats-value">0</div>
+                    </div>
+                    <div class="stats-box">
+                        <div class="stats-label">Всего проверено</div>
+                        <div id="stats-total" class="stats-value total">0</div>
+                    </div>
+                </div>
+            </div>
+            <button class="pill-btn outline" onclick="closeViewUserModal()" style="margin-top:20px;">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="crop-modal" class="modal-overlay hidden" style="z-index: 1500;">
+        <div class="modal-content crop-card">
+            <h3>Редактирование</h3><div class="crop-container"><img id="image-to-crop" src=""></div>
+            <div class="crop-buttons"><button class="save-btn" onclick="saveCroppedAvatar()">✔ Применить</button><button class="logout-btn" onclick="cancelCrop()">Отмена</button></div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-content new-profile-card">
+            <div class="profile-layout">
+                <div class="profile-left">
+                    <div class="big-avatar-container">
+                        <img id="profile-avatar-big" src="" alt="Avatar">
+                        <button class="delete-avatar-btn" onclick="openDeleteAvatarConfirm()"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <input type="file" id="file-input" accept="image/*" hidden onchange="prepAvatarCrop()">
+                    <button class="pill-btn outline" onclick="triggerFileUpload()"><i class="fa-solid fa-camera"></i> Загрузить</button>
+                    <button class="pill-btn danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Выйти из аккаунта</button>
+                </div>
+                <div class="profile-right">
+                    <label class="info-label">Личные данные</label>
+                    <div class="info-group">
+                        <div class="info-pill"><span class="pill-label">Nick Name</span><span id="profile-nick-big" class="pill-value">...</span></div>
+                        <div class="info-pill"><span class="pill-label">Должность</span><span id="profile-role" class="pill-value">...</span></div>
+                        <div class="info-pill vk-pill"><span class="pill-label">VK ID</span><span id="profile-vk" class="pill-value">...</span></div>
+                    </div>
+                    <div class="spacer"></div>
+                    <div class="profile-bottom-buttons">
+                        <button class="pill-btn outline" onclick="openSettingsModal()" style="width: auto; padding: 10px 15px;"><i class="fa-solid fa-gear"></i></button>
+                        <button id="btn-admin-panel" class="pill-btn admin hidden" onclick="openAdminModal()"><i class="fa-solid fa-crown"></i> Админ</button>
+                        <button class="pill-btn back-btn" onclick="closeProfile()">Назад</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-avatar-modal" class="modal-overlay hidden" style="z-index: 3000;">
+        <div class="modal-content warning-card" style="width: 350px; border-color: #ff4757;">
+            <h3>Удалить текущую аватарку?</h3><br>
+            <div class="form-buttons">
+                <button class="save-btn" onclick="confirmDeleteAvatar()" style="background: #ff4757; color: white;">Да</button>
+                <button class="logout-btn" onclick="closeDeleteAvatarModal()">Нет</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal-overlay hidden">
+        <div class="modal-content admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">👑 Админ Панель</h3>
+                <button class="close-icon" onclick="closeAdminModal()" style="float:none;">✖</button>
+            </div>
+            
+            <div class="admin-controls-grid">
+                <button class="action-btn update-btn" onclick="pushSiteUpdate()"><i class="fa-solid fa-bullhorn"></i> Объявить об обновлении</button>
+                <button id="btn-toggle-maint" class="action-btn maint-btn" onclick="toggleMaintenance()"><i class="fa-solid fa-power-off"></i> Включить Тех. Работы</button>
+                <button class="action-btn" onclick="openSendNotificationModal()" style="background: #e94560; color: white; border: 1px solid #ff5e78;"><i class="fa-regular fa-paper-plane"></i> Отправить уведомление</button>
+                <button class="action-btn" onclick="openChangeDateModal()" style="background: #3c4a6e; color: white; border: 1px solid #555;"><i class="fa-regular fa-calendar"></i> Изменить дату сезона</button>
+                <button class="action-btn" onclick="openBaseUsersModal()" style="background: #555; color: white; border:none; margin-top:5px;"><i class="fa-solid fa-users-line"></i> База пользователей</button>
+                <button class="action-btn" onclick="openLogsModal()" style="background: #e67e22; color: white; border:none; margin-top:5px;"><i class="fa-solid fa-file-lines"></i> Логи действий</button>
+                <button class="action-btn" onclick="openAddRecordModal()" style="background: #0077ff; color: white; border:none; margin-top:5px;"><i class="fa-solid fa-plus"></i> Добавить запись (Админ)</button>
+                <button class="action-btn" onclick="openGenerateRangeModal()" style="background: #6c5ce7; color: white; border:none; margin-top:5px;"><i class="fa-solid fa-list-ol"></i> Генерация пустых ID</button>
+                <button class="action-btn delete-all-btn" onclick="openClearDatabaseChoice()"><i class="fa-solid fa-trash"></i> Очистить таблицу</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="generate-range-modal" class="modal-overlay hidden" style="z-index: 2100;">
+        <div class="modal-content" style="width: 400px;">
+            <h3>Генерация пустых ID</h3>
+            <p style="color: #aaa; font-size: 0.8rem; margin-bottom: 15px;">Создаст пустые ячейки в указанном диапазоне</p>
+            <div class="add-worker-form">
+                <label>Категория</label>
+                <select id="gen-range-cat" class="custom-input-select">
+                    <option value="houses">Дома</option>
+                    <option value="biz">Бизнесы</option>
+                    <option value="trailers">Трейлеры</option>
+                </select>
+                <label>От ID</label>
+                <input type="number" id="gen-range-from" placeholder="0">
+                <label>До ID</label>
+                <input type="number" id="gen-range-to" placeholder="100">
+                <div class="form-buttons">
+                    <button class="save-btn" onclick="processRangeGeneration()">Создать</button>
+                    <button class="logout-btn" onclick="closeGenerateRangeModal()">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="base-users-modal" class="modal-overlay hidden" style="z-index: 2300;">
+        <div class="modal-content workers-card-new">
+            <div class="modal-header"><h3>📂 Все пользователи</h3></div>
+            <p style="color:#aaa; font-size:0.8rem; margin-bottom:10px;">Список всех, кто зарегистрирован в системе</p>
+            <div class="workers-list-container-new" id="base-users-list"><div class="loader"></div></div>
+            <button class="cancel-btn-wide" onclick="closeBaseUsersModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="change-date-modal" class="modal-overlay hidden" style="z-index: 2300;">
+        <div class="modal-content" style="width: 400px;">
+            <h3>📅 Дата сезона</h3><br>
+            <input type="text" id="new-date-input" placeholder="Например: 16.11.2025 → 23.11.2026">
+            <div class="form-buttons"><button class="save-btn" onclick="saveNewDate()">Сохранить</button><button class="logout-btn" onclick="closeChangeDateModal()">Отмена</button></div>
+        </div>
+    </div>
+
+    <div id="clear-db-modal" class="modal-overlay hidden" style="z-index: 2200;">
+        <div class="modal-content warning-card" style="border-color: #ff4757; width: 400px; box-shadow: 0 0 30px rgba(255, 71, 87, 0.3);">
+            <i class="fa-solid fa-triangle-exclamation warning-icon" style="color: #ff4757;"></i>
+            <h3>ОПАСНАЯ ЗОНА</h3><p>Какую таблицу очистить ПОЛНОСТЬЮ?</p><br>
+            <div class="upload-grid">
+                <button class="upload-choice-btn" onclick="clearDatabase('houses')" style="border-color: #ff4757; color: #ff4757;">Дома</button>
+                <button class="upload-choice-btn" onclick="clearDatabase('biz')" style="border-color: #ff4757; color: #ff4757;">Бизнесы</button>
+                <button class="upload-choice-btn" onclick="clearDatabase('trailers')" style="border-color: #ff4757; color: #ff4757;">Трейлеры</button>
+            </div>
+            <button class="logout-btn" onclick="closeClearDatabaseChoice()" style="margin-top: 20px;">Отмена</button>
+        </div>
+    </div>
+
+    <div id="add-record-modal" class="modal-overlay hidden" style="z-index: 1600;">
+        <div class="modal-content workers-card-new" style="height: auto;">
+            <div class="modal-header"><h3>📝 Добавить нарушение</h3></div>
+            <div class="add-worker-form">
+                <label>ID</label><input type="number" id="rec-id">
+                <label>Владелец</label><input type="text" id="rec-owner">
+                <label>Название</label><input type="text" id="rec-name">
+                <label>Нарушение</label>
+                <select id="rec-violation" class="custom-select" style="border: 1px solid rgba(255,255,255,0.1);">
+                    <option value="Нет нарушения">Нет нарушения</option>
+                    <option value="Маппинг">Маппинг</option>
+                    <option value="Названия">Названия</option>
+                    <option value="Маппинг + названия">Маппинг + названия</option>
+                </select>
+                <label>Док-ва</label><input type="text" id="rec-proof">
+                <div class="form-buttons"><button class="save-btn" onclick="saveRecord()">Добавить</button><button class="logout-btn" onclick="closeAddRecordModal()">Отмена</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gen-choice-modal" class="modal-overlay hidden" style="z-index: 2500;">
+        <div class="modal-content" style="width: 350px;">
+            <h3>Выберите действие</h3>
+            <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px;">Действие применится ко всем записям с <b>Красным крестиком</b> (✖) для удаления, или с <b>Галочкой</b> (✔) для Notif</p>
+            <div id="gen-buttons-container" class="upload-grid"></div>
+            <button class="logout-btn" onclick="closeGenChoice()" style="margin-top: 15px;">Отмена</button>
+        </div>
+    </div>
+
+    <div id="gen-result-modal" class="modal-overlay hidden" style="z-index: 2600;">
+        <div class="modal-content" style="width: 600px;">
+            <h3>Готовые команды</h3>
+            <textarea id="gen-result-text" class="custom-textarea" readonly></textarea>
+            <div class="form-buttons"><button class="save-btn" onclick="copyGenResult()">Копировать</button><button class="logout-btn" onclick="closeGenResult()">Закрыть</button></div>
+        </div>
+    </div>
+
+    <div id="archive-view-modal" class="modal-overlay hidden" style="z-index: 3500;">
+        <div class="modal-content" style="width: 90%; max-width: 1400px; height: 90vh; display: flex; flex-direction: column; padding: 20px;">
+            <div class="archive-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 15px;">
+                <h2 id="archive-view-title" style="margin: 0; color: #e94560;">Просмотр архива</h2>
+                <span class="role-badge" style="background:#555; color:white;">READ ONLY</span>
+                <button class="close-icon" onclick="closeArchiveViewer()" style="font-size: 2rem;">&times;</button>
+            </div>
+            <div class="header-bottom" style="justify-content: flex-start; gap: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                <nav class="nav-tabs" id="archive-tabs">
+                    <button class="tab-btn active" onclick="switchArchiveTab('houses')"><i class="fa-solid fa-house"></i> Дома</button>
+                    <button class="tab-btn" onclick="switchArchiveTab('biz')"><i class="fa-solid fa-briefcase"></i> Бизнес</button>
+                    <button class="tab-btn" onclick="switchArchiveTab('trailers')"><i class="fa-solid fa-trailer"></i> Трейлеры</button>
+                </nav>
+            </div>
+            <div id="archive-content-area" style="flex: 1; overflow-y: auto; margin-top: 15px; position: relative;"><div class="loader"></div></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
